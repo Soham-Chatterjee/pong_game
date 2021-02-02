@@ -3,6 +3,8 @@ from pygame import draw
 from pygame.constants import KEYDOWN
 from win32api import GetSystemMetrics
 
+
+
 class button():
     def __init__(self, color, x,y,width,height, text_col, text=''):
         self.color = color
@@ -148,27 +150,6 @@ class GameManager:
 		self.ball_group = ball_group
 		self.paddle_group = paddle_group
 
-
-	def pause(self):
-		loop = 1
-		pause_text = basic_font.render(f"Game PAUSED", False, base_color)
-		pause_rect = pause_text.get_rect(center=(dimensions[0]/2, 300))
-		screen.blit(pause_text, pause_rect)
-		pause_text_2 = basic_font.render(f"Press SPACE to resume", False, base_color)
-		pause_rect_2 = pause_text_2.get_rect(center=(dimensions[0]/2, 350))
-		screen.blit(pause_text_2, pause_rect_2)
-		while loop:
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					pygame.quit()
-					sys.exit()
-				if event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_SPACE:
-						screen.fill((0, 0, 0))
-						loop = 0
-			pygame.display.update()
-			clock.tick(60)
-
 	def run_game(self):
 
 		self.paddle_group.draw(screen)
@@ -179,6 +160,51 @@ class GameManager:
 		self.ball_group.update()
 		self.reset_ball()
 		self.draw_score()
+
+	def pause(self):
+		global gamestate, frame_count, frame_rate, start_time, difficulty, sing_player_running, multiplayer_running
+		loop = 1
+		pause_text = basic_font.render(f"Game PAUSED", False, base_color)
+		pause_rect = pause_text.get_rect(center=(dimensions[0]/2, 300))
+		screen.blit(pause_text, pause_rect)
+		pause_text_2 = basic_font.render(f"Press SPACE to resume", False, base_color)
+		pause_rect_2 = pause_text_2.get_rect(center=(dimensions[0]/2, 350))
+		screen.blit(pause_text_2, pause_rect_2)
+		pause_text_3 = basic_font.render(f"Press ESCAPE to skip to menu", False, base_color)
+		pause_rect_3 = pause_text_3.get_rect(center=(dimensions[0]/2, 400))
+		screen.blit(pause_text_3, pause_rect_3)
+		while loop:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					pygame.quit()
+					sys.exit()
+				if event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_SPACE:
+						screen.fill((0, 0, 0))
+						loop = 0
+					if event.key == pygame.K_ESCAPE:
+						frame_count = 0
+						frame_rate = 60
+						start_time = 300
+						game_manager_ai_easy.player_score = 0
+						game_manager_ai_easy.opponent_score = 0
+						game_manager_ai_medium.player_score = 0
+						game_manager_ai_medium.opponent_score = 0
+						game_manager_ai_hard.player_score = 0
+						game_manager_ai_hard.opponent_score = 0
+						game_manager_human.player_score = 0
+						game_manager_human.opponent_score = 0
+						ball_ai_easy.reset_ball()
+						ball_ai_hard.reset_ball()
+						ball_ai_medium.reset_ball()
+						ball_human.reset_ball()
+						difficulty = ''
+						sing_player_running = False
+						multiplayer_running = False
+						gamestate = 0
+						loop = 0
+				pygame.display.update()
+				clock.tick(60)	
 
 	def reset_ball(self):
 		if self.ball_group.sprite.rect.right >= screen_width:
@@ -198,7 +224,7 @@ class GameManager:
 		screen.blit(player_score,player_score_rect)
 		screen.blit(opponent_score,opponent_score_rect)
 
-	
+
 
 
 gamestate = 0
@@ -218,6 +244,10 @@ screen_height = 720
 screen = pygame.display.set_mode((screen_width,screen_height))
 pygame.display.set_caption('Pong Game')
 
+frame_count = 0
+frame_rate = 60
+start_time = 300
+difficulty = ''
 
 bg_color = pygame.Color('#2F373F')
 accent_color = (27,35,43)
@@ -274,11 +304,6 @@ easy_button = button(bg_color, dimensions[0]/2-150, 350, 300, 50, base_color, "E
 medium_button = button(bg_color, dimensions[0]/2-150, 450, 300, 50, base_color, "Medium")
 hard_button = button(bg_color, dimensions[0]/2-150, 550, 300, 50, base_color, "Hard")
 
-frame_count = 0
-frame_rate = 60
-start_time = 300
-difficulty = ''
-
 game_manager_ai_easy = GameManager(ball_ai_easy_sprite,paddle_group_ai_easy)
 game_manager_ai_medium = GameManager(ball_ai_medium_sprite,paddle_group_ai_medium)
 game_manager_ai_hard = GameManager(ball_ai_hard_sprite,paddle_group_ai_hard)
@@ -286,7 +311,6 @@ game_manager_human = GameManager(ball_human_sprite,paddle_group_human)
 sing_player_running = False
 multiplayer_running = False
 running = True
-
 
 while running:
 	if gamestate == 0:
@@ -398,6 +422,7 @@ while running:
 		prev_game_state = gamestate
 		main_string = "Single Player Mode"
 		sub_string = "Please select difficulty level"
+		back_string = "Press ESCAPE to go back to menu"
 		screen.fill(bg_color)
 		drawObjects(easy_button)
 		drawObjects(medium_button)
@@ -408,6 +433,9 @@ while running:
 		sub_text = basic_font.render(sub_string, True, base_color)
 		sub_rect = sub_text.get_rect(center=(dimensions[0]/2, 150))
 		screen.blit(sub_text, sub_rect)
+		back_text = basic_font.render(back_string, True, base_color)
+		back_rect = back_text.get_rect(center=(dimensions[0]/2, 200))
+		screen.blit(back_text, back_rect)
 		pygame.display.update()
 		for event in pygame.event.get():
 			pos = pygame.mouse.get_pos()
@@ -455,6 +483,25 @@ while running:
 					medium_button.text_colour = base_color
 					hard_button.color = bg_color
 					hard_button.text_colour = base_color
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_ESCAPE:
+					frame_count = 0
+					frame_rate = 60
+					start_time = 300
+					game_manager_ai_easy.player_score = 0
+					game_manager_ai_easy.opponent_score = 0
+					game_manager_ai_medium.player_score = 0
+					game_manager_ai_medium.opponent_score = 0
+					game_manager_ai_hard.player_score = 0
+					game_manager_ai_hard.opponent_score = 0
+					game_manager_human.player_score = 0
+					game_manager_human.opponent_score = 0
+					ball_ai_easy.reset_ball()
+					ball_ai_hard.reset_ball()
+					ball_ai_medium.reset_ball()
+					ball_human.reset_ball()
+					difficulty = ''
+					gamestate = 0
 	elif gamestate == 3:
 		if difficulty == "easy":
 			prev_game_state = gamestate
@@ -491,6 +538,25 @@ while running:
 						screen.fill((0, 0, 0))
 						ball_ai_easy.active = True
 						sing_player_running = True
+					if event.key == pygame.K_ESCAPE:
+						frame_count = 0
+						frame_rate = 60
+						start_time = 300
+						game_manager_ai_easy.player_score = 0
+						game_manager_ai_easy.opponent_score = 0
+						game_manager_ai_medium.player_score = 0
+						game_manager_ai_medium.opponent_score = 0
+						game_manager_ai_hard.player_score = 0
+						game_manager_ai_hard.opponent_score = 0
+						game_manager_human.player_score = 0
+						game_manager_human.opponent_score = 0
+						ball_ai_easy.reset_ball()
+						ball_ai_hard.reset_ball()
+						ball_ai_medium.reset_ball()
+						ball_human.reset_ball()
+						difficulty = ''
+						sing_player_running = False
+						gamestate = 0
 				if event.type == pygame.KEYUP:
 					if event.key == pygame.K_UP:
 						player.movement += player.speed
@@ -505,6 +571,9 @@ while running:
 			pause_text_2 = basic_font.render(f"Press ENTER to start", False, base_color)
 			pause_rect_2 = pause_text_2.get_rect(center=(dimensions[0]/2, 350))
 			screen.blit(pause_text_2, pause_rect_2)
+			pause_text_3 = basic_font.render(f"Press ESCAPE to go back to menu", False, base_color)
+			pause_rect_3 = pause_text_3.get_rect(center=(dimensions[0]/2, 400))
+			screen.blit(pause_text_3, pause_rect_3)
 			
 			timer_text = basic_font.render(output_string, True, base_color)
 			screen.blit(timer_text, (480, 670))
@@ -560,6 +629,25 @@ while running:
 						screen.fill((0, 0, 0))
 						ball_ai_medium.active = True
 						sing_player_running = True
+					if event.key == pygame.K_ESCAPE:
+						frame_count = 0
+						frame_rate = 60
+						start_time = 300
+						game_manager_ai_easy.player_score = 0
+						game_manager_ai_easy.opponent_score = 0
+						game_manager_ai_medium.player_score = 0
+						game_manager_ai_medium.opponent_score = 0
+						game_manager_ai_hard.player_score = 0
+						game_manager_ai_hard.opponent_score = 0
+						game_manager_human.player_score = 0
+						game_manager_human.opponent_score = 0
+						ball_ai_easy.reset_ball()
+						ball_ai_hard.reset_ball()
+						ball_ai_medium.reset_ball()
+						ball_human.reset_ball()
+						difficulty = ''
+						sing_player_running = False
+						gamestate = 0
 				if event.type == pygame.KEYUP:
 					if event.key == pygame.K_UP:
 						player.movement += player.speed
@@ -574,6 +662,9 @@ while running:
 			pause_text_2 = basic_font.render(f"Press ENTER to start", False, base_color)
 			pause_rect_2 = pause_text_2.get_rect(center=(dimensions[0]/2, 350))
 			screen.blit(pause_text_2, pause_rect_2)
+			pause_text_3 = basic_font.render(f"Press ESCAPE to go back to menu", False, base_color)
+			pause_rect_3 = pause_text_3.get_rect(center=(dimensions[0]/2, 400))
+			screen.blit(pause_text_3, pause_rect_3)
 			
 			timer_text = basic_font.render(output_string, True, base_color)
 			screen.blit(timer_text, (480, 670))
@@ -629,6 +720,25 @@ while running:
 						screen.fill((0, 0, 0))
 						ball_ai_hard.active = True
 						sing_player_running = True
+					if event.key == pygame.K_ESCAPE:
+						frame_count = 0
+						frame_rate = 60
+						start_time = 300
+						game_manager_ai_easy.player_score = 0
+						game_manager_ai_easy.opponent_score = 0
+						game_manager_ai_medium.player_score = 0
+						game_manager_ai_medium.opponent_score = 0
+						game_manager_ai_hard.player_score = 0
+						game_manager_ai_hard.opponent_score = 0
+						game_manager_human.player_score = 0
+						game_manager_human.opponent_score = 0
+						ball_ai_easy.reset_ball()
+						ball_ai_hard.reset_ball()
+						ball_ai_medium.reset_ball()
+						ball_human.reset_ball()
+						difficulty = ''
+						sing_player_running = False
+						gamestate = 0
 				if event.type == pygame.KEYUP:
 					if event.key == pygame.K_UP:
 						player.movement += player.speed
@@ -643,6 +753,9 @@ while running:
 			pause_text_2 = basic_font.render(f"Press ENTER to start", False, base_color)
 			pause_rect_2 = pause_text_2.get_rect(center=(dimensions[0]/2, 350))
 			screen.blit(pause_text_2, pause_rect_2)
+			pause_text_3 = basic_font.render(f"Press ESCAPE to go back to menu", False, base_color)
+			pause_rect_3 = pause_text_3.get_rect(center=(dimensions[0]/2, 400))
+			screen.blit(pause_text_3, pause_rect_3)
 			
 			timer_text = basic_font.render(output_string, True, base_color)
 			screen.blit(timer_text, (480, 670))
@@ -707,6 +820,25 @@ while running:
 					screen.fill((0, 0, 0))
 					ball_human.active = True
 					multiplayer_running = True
+				if event.key == pygame.K_ESCAPE:
+					frame_count = 0
+					frame_rate = 60
+					start_time = 300
+					game_manager_ai_easy.player_score = 0
+					game_manager_ai_easy.opponent_score = 0
+					game_manager_ai_medium.player_score = 0
+					game_manager_ai_medium.opponent_score = 0
+					game_manager_ai_hard.player_score = 0
+					game_manager_ai_hard.opponent_score = 0
+					game_manager_human.player_score = 0
+					game_manager_human.opponent_score = 0
+					ball_ai_easy.reset_ball()
+					ball_ai_hard.reset_ball()
+					ball_ai_medium.reset_ball()
+					ball_human.reset_ball()
+					difficulty = ''
+					multiplayer_running = False
+					gamestate = 0
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_UP:
 					player.movement += player.speed
@@ -725,9 +857,13 @@ while running:
 		pause_text_2 = basic_font.render(f"Press ENTER to start", False, base_color)
 		pause_rect_2 = pause_text_2.get_rect(center=(dimensions[0]/2, 350))
 		screen.blit(pause_text_2, pause_rect_2)
+		pause_text_3 = basic_font.render(f"Press ESCAPE to go back to menu", False, base_color)
+		pause_rect_3 = pause_text_3.get_rect(center=(dimensions[0]/2, 400))
+		screen.blit(pause_text_3, pause_rect_3)
 		
 		timer_text = basic_font.render(output_string, True, base_color)
-		screen.blit(timer_text, (480, 670))
+		timer_rect = timer_text.get_rect(center=(dimensions[0]/2, 670))
+		screen.blit(timer_text, timer_rect)
 		
 		if multiplayer_running:
 			screen.fill(bg_color)
@@ -756,7 +892,7 @@ while running:
 				if back_button.isOver(pos):
 					frame_count = 0
 					frame_rate = 60
-					start_time = 10
+					start_time = 300
 					game_manager_ai_easy.player_score = 0
 					game_manager_ai_easy.opponent_score = 0
 					game_manager_ai_medium.player_score = 0
@@ -774,7 +910,7 @@ while running:
 				elif play_again_button.isOver(pos) and prev_game_state == 3:
 					frame_count = 0
 					frame_rate = 60
-					start_time = 10
+					start_time = 300
 					game_manager_ai_easy.player_score = 0
 					game_manager_ai_easy.opponent_score = 0
 					game_manager_ai_medium.player_score = 0
@@ -788,7 +924,7 @@ while running:
 				elif play_again_button.isOver(pos) and prev_game_state == 4:
 					frame_count = 0
 					frame_rate = 60
-					start_time = 10
+					start_time = 300
 					game_manager_human.player_score = 0
 					game_manager_human.opponent_score = 0
 					ball_human.reset_ball()
